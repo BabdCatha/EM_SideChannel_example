@@ -84,6 +84,53 @@ void mixColumns(T_STATE* input_state){
 
 }
 
+//XOR the current state with the round key, byte by byte
+void addRoundKey(T_STATE* input_state, T_STATE* round_key){
+
+	//Loop variables
+	int i = 0; //Line
+	int j = 0; //Column
+
+	for(i = 0; i < 4; i++){
+		for(j = 0; j < 4; j++){
+			input_state->state[i][j] = input_state->state[i][j] ^ round_key->state[i][j];
+		}
+	}
+
+}
+
+//See section 5.2 of FIPS-197 for technical explanations
+//For AES-128, Nr = 10; Nb = 4 and Nk = 4.
+T_STATE* keyExpansion(char* key){
+
+	//Output variable
+	T_STATE output_array[10];
+	output_array = malloc(10*sizeof(T_STATE));
+
+	//Key expansion constants
+	char Rcon[10][4] = {
+			0x01, 0x00, 0x00, 0x00,
+			0x02, 0x00, 0x00, 0x00,
+			0x04, 0x00, 0x00, 0x00,
+			0x08, 0x00, 0x00, 0x00,
+			0x10, 0x00, 0x00, 0x00,
+			0x20, 0x00, 0x00, 0x00,
+			0x40, 0x00, 0x00, 0x00,
+			0x80, 0x00, 0x00, 0x00,
+			0x1b, 0x00, 0x00, 0x00,
+			0x36, 0x00, 0x00, 0x00
+	};
+
+	//Loop variable
+	int i = 0;
+
+	while(i < 3){
+
+		i++;
+	}
+
+}
+
 char xtime(char input){
 
 	//See FIPS-197 for explanations
@@ -91,5 +138,27 @@ char xtime(char input){
 	result = result ^ 0x1b;
 
 	return result;
+
+}
+
+void subWord(char* input_word){
+
+	//Loop variable
+	int i = 0;
+
+	for(int i = 0; i < 4; i++){
+		input_word[i] = subByte(input_word[i]);
+	}
+
+}
+
+void rotWord(char* input_word){
+
+	//temp variable
+	char temp = input_word[0];
+	input_word[0] = input_word[1];
+	input_word[1] = input_word[2];
+	input_word[2] = input_word[3];
+	input_word[3] = temp;
 
 }
