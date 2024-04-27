@@ -1,0 +1,8 @@
+../Core/Src/AES.c:3:9:subBytes	1
+../Core/Src/AES.c:28:6:shiftRows	3
+../Core/Src/AES.c:56:6:mixColumns	3
+../Core/Src/AES.c:88:6:addRoundKey	3
+../Core/Src/AES.c:104:11:keyExpansion	8
+../Core/Src/AES.c:188:9:xtime	1
+../Core/Src/AES.c:198:6:subWord	2
+../Core/Src/AES.c:209:6:rotWord	1

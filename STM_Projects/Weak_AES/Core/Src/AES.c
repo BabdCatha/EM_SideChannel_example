@@ -1,8 +1,8 @@
 #include "AES.h"
 
-char subBytes(char input){
+uint8_t subBytes(uint8_t input){
 
-	unsigned char sbox[256] = {
+	uint8_t sbox[256] = {
 	    // 0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
 	    0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,  // 0
 	    0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,  // 1
@@ -28,11 +28,11 @@ char subBytes(char input){
 void shiftRows(T_STATE* input_state){
 
 	//A temporary array to store a copy of the line being worked on
-	char temp_array[4] = malloc(4*sizeof(char));
+	uint8_t* temp_array = malloc(4*sizeof(char));
 
 	//Loop variables
-	int i = 1;
-	int j = 0;
+	uint8_t i = 1;
+	uint8_t j = 0;
 
 	//Looping over lines 1,2,3 of the state
 	//Line 0 stays unchanged by the shiftRows operation
@@ -56,11 +56,11 @@ void shiftRows(T_STATE* input_state){
 void mixColumns(T_STATE* input_state){
 
 	//A temporary array to store a copy of the column being worked on
-	char temp_array[4] = malloc(4*sizeof(char));
+	uint8_t* temp_array = malloc(4*sizeof(char));
 
 	//Loop variables
-	int i = 0; //Line
-	int j = 0; //Column
+	uint8_t i = 0; //Line
+	uint8_t j = 0; //Column
 
 	//Iterating over the columns
 	for(j = 0; j < 4; i++){
@@ -88,8 +88,8 @@ void mixColumns(T_STATE* input_state){
 void addRoundKey(T_STATE* input_state, T_STATE* round_key){
 
 	//Loop variables
-	int i = 0; //Line
-	int j = 0; //Column
+	uint8_t i = 0; //Line
+	uint8_t j = 0; //Column
 
 	for(i = 0; i < 4; i++){
 		for(j = 0; j < 4; j++){
@@ -101,61 +101,115 @@ void addRoundKey(T_STATE* input_state, T_STATE* round_key){
 
 //See section 5.2 of FIPS-197 for technical explanations
 //For AES-128, Nr = 10; Nb = 4 and Nk = 4.
-T_STATE* keyExpansion(char* key){
+T_STATE** keyExpansion(uint8_t* key){
 
 	//Output variable
-	T_STATE output_array[10];
-	output_array = malloc(10*sizeof(T_STATE));
-
-	//Key expansion constants
-	char Rcon[10][4] = {
-			0x01, 0x00, 0x00, 0x00,
-			0x02, 0x00, 0x00, 0x00,
-			0x04, 0x00, 0x00, 0x00,
-			0x08, 0x00, 0x00, 0x00,
-			0x10, 0x00, 0x00, 0x00,
-			0x20, 0x00, 0x00, 0x00,
-			0x40, 0x00, 0x00, 0x00,
-			0x80, 0x00, 0x00, 0x00,
-			0x1b, 0x00, 0x00, 0x00,
-			0x36, 0x00, 0x00, 0x00
-	};
+	T_STATE** output_array;
+	output_array = malloc((Nr + 1)*sizeof(T_STATE*));
 
 	//Loop variable
-	int i = 0;
+	uint8_t i = 0;
+	uint8_t j = 0;
 
-	while(i < 3){
+	for(i = 0; i <= Nr; i++){
+	    output_array[i] = malloc(sizeof(T_STATE));
+	}
 
+	//Temp variable to hold the intermediate steps
+	uint8_t** w = malloc((4 * (Nr + 1)) * sizeof(uint8_t*));
+	for(i = 0; i < (4 * (Nr + 1)); i++){
+	    w[i] = malloc(4*sizeof(uint8_t));
+	}
+
+	//Key expansion constants
+	uint8_t Rcon[10][4] = {
+			{0x01, 0x00, 0x00, 0x00},
+			{0x02, 0x00, 0x00, 0x00},
+			{0x04, 0x00, 0x00, 0x00},
+			{0x08, 0x00, 0x00, 0x00},
+			{0x10, 0x00, 0x00, 0x00},
+			{0x20, 0x00, 0x00, 0x00},
+			{0x40, 0x00, 0x00, 0x00},
+			{0x80, 0x00, 0x00, 0x00},
+			{0x1b, 0x00, 0x00, 0x00},
+			{0x36, 0x00, 0x00, 0x00}
+	};
+
+	i = 0;
+	while(i < Nk){
+		w[i][0] = key[4*i];
+		w[i][1] = key[4*i+1];
+		w[i][2] = key[4*i+2];
+		w[i][3] = key[4*i+3];
 		i++;
 	}
 
+	//Another temporary variable
+	uint8_t* temp = malloc(4*sizeof(uint8_t));
+
+	while(i <= (4 * Nr) + 3){
+
+		memcpy(temp, w[i-1], 4*sizeof(uint8_t));
+
+		if(i% Nk == 0){
+			rotWord(temp);
+			subWord(temp);
+			temp[0] = temp[0] ^ Rcon[(i/Nk) - 1][0];
+			temp[1] = temp[1] ^ Rcon[(i/Nk) - 1][1];
+			temp[2] = temp[2] ^ Rcon[(i/Nk) - 1][2];
+			temp[3] = temp[3] ^ Rcon[(i/Nk) - 1][3];
+		}
+
+		w[i][0] = w[i - Nk][0] ^ temp[0];
+		w[i][1] = w[i - Nk][1] ^ temp[1];
+		w[i][2] = w[i - Nk][2] ^ temp[2];
+		w[i][3] = w[i - Nk][3] ^ temp[3];
+
+		i++;
+
+	}
+
+	//At this point, the columns of the round keys have been computed and stored in w
+	//We transform them back into states
+
+	for(i = 0; i <= Nr; i++){
+		for(j = 0; j < 4; j++){
+			output_array[i]->state[0][j] = w[4*i+j][0];
+			output_array[i]->state[1][j] = w[4*i+j][1];
+			output_array[i]->state[2][j] = w[4*i+j][2];
+			output_array[i]->state[3][j] = w[4*i+j][3];
+		}
+	}
+
+	return output_array;
+
 }
 
-char xtime(char input){
+uint8_t xtime(uint8_t input){
 
 	//See FIPS-197 for explanations
-	char result = input << 1;
+	uint8_t result = input << 1;
 	result = result ^ 0x1b;
 
 	return result;
 
 }
 
-void subWord(char* input_word){
+void subWord(uint8_t* input_word){
 
 	//Loop variable
-	int i = 0;
+	uint8_t i = 0;
 
-	for(int i = 0; i < 4; i++){
-		input_word[i] = subByte(input_word[i]);
+	for(i = 0; i < 4; i++){
+		input_word[i] = subBytes(input_word[i]);
 	}
 
 }
 
-void rotWord(char* input_word){
+void rotWord(uint8_t* input_word){
 
 	//temp variable
-	char temp = input_word[0];
+	uint8_t temp = input_word[0];
 	input_word[0] = input_word[1];
 	input_word[1] = input_word[2];
 	input_word[2] = input_word[3];
