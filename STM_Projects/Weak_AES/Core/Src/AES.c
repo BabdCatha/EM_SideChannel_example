@@ -1,6 +1,6 @@
 #include "AES.h"
 
-uint8_t subBytes(uint8_t input){
+uint8_t SBox(uint8_t input){
 
 	uint8_t sbox[256] = {
 	    // 0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
@@ -22,6 +22,15 @@ uint8_t subBytes(uint8_t input){
 	    0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}; // F
 
 	return sbox[input];
+
+}
+
+void subBytes(T_STATE* input){
+
+	uint8_t i = 0;
+	for(i = 0; i < 4; i++){
+		subWord(input->state[i]);
+	}
 
 }
 
@@ -187,9 +196,14 @@ T_STATE** keyExpansion(uint8_t* key){
 
 uint8_t xtime(uint8_t input){
 
+	uint8_t msb = input >> 7;
+
 	//See FIPS-197 for explanations
 	uint8_t result = input << 1;
-	result = result ^ 0x1b;
+
+	if(msb){
+		result = result ^ 0x1b;
+	}
 
 	return result;
 
@@ -201,7 +215,7 @@ void subWord(uint8_t* input_word){
 	uint8_t i = 0;
 
 	for(i = 0; i < 4; i++){
-		input_word[i] = subBytes(input_word[i]);
+		input_word[i] = SBox(input_word[i]);
 	}
 
 }
@@ -214,5 +228,31 @@ void rotWord(uint8_t* input_word){
 	input_word[1] = input_word[2];
 	input_word[2] = input_word[3];
 	input_word[3] = temp;
+
+}
+
+void cipher(uint8_t* key, T_STATE* input){
+
+	T_STATE** expanded_key;
+	expanded_key = keyExpansion(key);
+
+	addRoundKey(input, expanded_key[0]);
+
+	uint8_t i = 0;
+
+	for(i = 1; i < 10; i++){
+
+		subBytes(input);
+		shiftRows(input);
+		mixColumns(input);
+		addRoundKey(input, expanded_key[i]);
+
+	}
+
+	subBytes(input);
+	shiftRows(input);
+	addRoundKey(input, expanded_key[10]);
+
+	return;
 
 }

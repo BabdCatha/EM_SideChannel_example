@@ -15,11 +15,13 @@ typedef struct{
 } T_STATE;
 
 //The main AES functions
-uint8_t subBytes(uint8_t input);
+uint8_t SBox(uint8_t input);
+void subBytes(T_STATE* input);
 void shiftRows(T_STATE* input_state);
 void mixColumns(T_STATE* input_state);
 void addRoundKey(T_STATE* input_state, T_STATE* round_key);
 T_STATE** keyExpansion(uint8_t* key);
+void cipher(uint8_t* key, T_STATE* input);
 
 //Helper function to multiply by 2 in GF(256)
 uint8_t xtime(uint8_t input);
