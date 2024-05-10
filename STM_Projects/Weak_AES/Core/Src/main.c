@@ -44,7 +44,7 @@
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
+uint8_t Rx_data[16];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,7 +91,32 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  //Preparing the AES cipher
+  uint8_t key[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 
+  T_STATE* input;
+  input = malloc(sizeof(T_STATE));
+
+
+  input->state[0][0] = 0x32;
+  input->state[0][1] = 0x88;
+  input->state[0][2] = 0x31;
+  input->state[0][3] = 0xe0;
+  input->state[1][0] = 0x43;
+  input->state[1][1] = 0x5a;
+  input->state[1][2] = 0x31;
+  input->state[1][3] = 0x37;
+  input->state[2][0] = 0xf6;
+  input->state[2][1] = 0x30;
+  input->state[2][2] = 0x98;
+  input->state[2][3] = 0x07;
+  input->state[3][0] = 0xa8;
+  input->state[3][1] = 0x8d;
+  input->state[3][2] = 0xa2;
+  input->state[3][3] = 0x34;
+
+
+  cipher(key, input);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,7 +124,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  if(input->state[0][0] == 0x39){
+		  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+		  HAL_Delay(100);
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -184,7 +212,8 @@ static void MX_USART3_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART3_Init 2 */
-
+  //Enabling the interrupt
+  HAL_UART_Receive_IT (&huart3, Rx_data, 16);
   /* USER CODE END USART3_Init 2 */
 
 }
@@ -307,6 +336,11 @@ void Error_Handler(void)
   {
   }
   /* USER CODE END Error_Handler_Debug */
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  HAL_UART_Receive_IT(&huart3, Rx_data, 4);
 }
 
 #ifdef  USE_FULL_ASSERT

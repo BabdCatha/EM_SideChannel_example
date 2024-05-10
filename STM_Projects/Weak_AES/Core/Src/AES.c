@@ -72,7 +72,7 @@ void mixColumns(T_STATE* input_state){
 	uint8_t j = 0; //Column
 
 	//Iterating over the columns
-	for(j = 0; j < 4; i++){
+	for(j = 0; j < 4; j++){
 
 		//Copying the column into temporary memory
 		for(i = 0; i < 4; i++){
@@ -90,6 +90,8 @@ void mixColumns(T_STATE* input_state){
 
 	//Freeing the temporary array
 	free(temp_array);
+
+	return;
 
 }
 
