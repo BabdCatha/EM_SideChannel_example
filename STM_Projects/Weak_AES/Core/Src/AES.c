@@ -45,13 +45,15 @@ void shiftRows(T_STATE* input_state){
 
 	//Looping over lines 1,2,3 of the state
 	//Line 0 stays unchanged by the shiftRows operation
-	for(i = 1; i < 4; i++){
+	for(j = 1; j < 4; j++){
 
-		//Copying the line being worked on to the temporary array
-		memcpy(temp_array, input_state->state[i], 4*sizeof(char));
+		//Copying the line into temporary memory
+		for(i = 0; i < 4; i++){
+			temp_array[i] = input_state->state[i][j];
+		}
 
 		//Looping over the line, shifting the bytes as required
-		for(j = 0; j < 4; j++){
+		for(i = 0; i < 4; i++){
 			input_state->state[i][j] = temp_array[(i+j) % 4];
 		}
 
@@ -59,6 +61,8 @@ void shiftRows(T_STATE* input_state){
 
 	//Releasing the temporary array
 	free(temp_array);
+
+	return;
 
 }
 
@@ -68,23 +72,20 @@ void mixColumns(T_STATE* input_state){
 	uint8_t* temp_array = malloc(4*sizeof(char));
 
 	//Loop variables
-	uint8_t i = 0; //Line
-	uint8_t j = 0; //Column
+	uint8_t i = 0; //Column
 
 	//Iterating over the columns
-	for(j = 0; j < 4; j++){
+	for(i = 0; i < 4; i++){
 
-		//Copying the column into temporary memory
-		for(i = 0; i < 4; i++){
-			temp_array[i] = input_state->state[i][j];
-		}
+		//Copying the column being worked on to the temporary array
+		memcpy(temp_array, input_state->state[i], 4*sizeof(char));
 
 		//Matrix multiplication on the column, using the xtime helper function
 		//See part 5.1.3 of FIPS-197 for detailed explanation
-		input_state->state[0][j] = xtime(temp_array[0]) ^ (xtime(temp_array[1]) ^ temp_array[1]) ^ temp_array[2] ^ temp_array[3];
-		input_state->state[1][j] = temp_array[0] ^ xtime(temp_array[1]) ^ (xtime(temp_array[2]) ^ temp_array[2]) ^ temp_array[3];
-		input_state->state[2][j] = temp_array[0] ^ temp_array[1] ^ xtime(temp_array[2]) ^ (xtime(temp_array[3]) ^ temp_array[3]);
-		input_state->state[3][j] = (xtime(temp_array[0]) ^ temp_array[0]) ^ temp_array[1] ^ temp_array[2] ^ xtime(temp_array[3]);
+		input_state->state[i][0] = xtime(temp_array[0]) ^ (xtime(temp_array[1]) ^ temp_array[1]) ^ temp_array[2] ^ temp_array[3];
+		input_state->state[i][1] = temp_array[0] ^ xtime(temp_array[1]) ^ (xtime(temp_array[2]) ^ temp_array[2]) ^ temp_array[3];
+		input_state->state[i][2] = temp_array[0] ^ temp_array[1] ^ xtime(temp_array[2]) ^ (xtime(temp_array[3]) ^ temp_array[3]);
+		input_state->state[i][3] = (xtime(temp_array[0]) ^ temp_array[0]) ^ temp_array[1] ^ temp_array[2] ^ xtime(temp_array[3]);
 
 	}
 
@@ -185,10 +186,10 @@ T_STATE** keyExpansion(uint8_t* key){
 
 	for(i = 0; i <= Nr; i++){
 		for(j = 0; j < 4; j++){
-			output_array[i]->state[0][j] = w[4*i+j][0];
-			output_array[i]->state[1][j] = w[4*i+j][1];
-			output_array[i]->state[2][j] = w[4*i+j][2];
-			output_array[i]->state[3][j] = w[4*i+j][3];
+			output_array[i]->state[j][0] = w[4*i+j][0];
+			output_array[i]->state[j][1] = w[4*i+j][1];
+			output_array[i]->state[j][2] = w[4*i+j][2];
+			output_array[i]->state[j][3] = w[4*i+j][3];
 		}
 	}
 
@@ -262,20 +263,20 @@ T_STATE* bytesToState(uint8_t* input_array){
 	output = malloc(sizeof(T_STATE));
 
 	output->state[0][0] = input_array[0x0];
-	output->state[1][0] = input_array[0x1];
-	output->state[2][0] = input_array[0x2];
-	output->state[3][0] = input_array[0x3];
-	output->state[0][1] = input_array[0x4];
+	output->state[0][1] = input_array[0x1];
+	output->state[0][2] = input_array[0x2];
+	output->state[0][3] = input_array[0x3];
+	output->state[1][0] = input_array[0x4];
 	output->state[1][1] = input_array[0x5];
-	output->state[2][1] = input_array[0x6];
-	output->state[3][1] = input_array[0x7];
-	output->state[0][2] = input_array[0x8];
-	output->state[1][2] = input_array[0x9];
+	output->state[1][2] = input_array[0x6];
+	output->state[1][3] = input_array[0x7];
+	output->state[2][0] = input_array[0x8];
+	output->state[2][1] = input_array[0x9];
 	output->state[2][2] = input_array[0xA];
-	output->state[3][2] = input_array[0xB];
-	output->state[0][3] = input_array[0xC];
-	output->state[1][3] = input_array[0xD];
-	output->state[2][3] = input_array[0xE];
+	output->state[2][3] = input_array[0xB];
+	output->state[3][0] = input_array[0xC];
+	output->state[3][1] = input_array[0xD];
+	output->state[3][2] = input_array[0xE];
 	output->state[3][3] = input_array[0xF];
 
 	return output;
@@ -288,20 +289,20 @@ uint8_t* stateToBytes(T_STATE* input_state){
 	output = malloc(16*sizeof(uint8_t));
 
 	output[0x0] = input_state->state[0][0];
-	output[0x1] = input_state->state[1][0];
-	output[0x2] = input_state->state[2][0];
-	output[0x3] = input_state->state[3][0];
-	output[0x4] = input_state->state[0][1];
+	output[0x1] = input_state->state[0][1];
+	output[0x2] = input_state->state[0][2];
+	output[0x3] = input_state->state[0][3];
+	output[0x4] = input_state->state[1][0];
 	output[0x5] = input_state->state[1][1];
-	output[0x6] = input_state->state[2][1];
-	output[0x7] = input_state->state[3][1];
-	output[0x8] = input_state->state[0][2];
-	output[0x9] = input_state->state[1][2];
+	output[0x6] = input_state->state[1][2];
+	output[0x7] = input_state->state[1][3];
+	output[0x8] = input_state->state[2][0];
+	output[0x9] = input_state->state[2][1];
 	output[0xA] = input_state->state[2][2];
-	output[0xB] = input_state->state[3][2];
-	output[0xC] = input_state->state[0][3];
-	output[0xD] = input_state->state[1][3];
-	output[0xE] = input_state->state[2][3];
+	output[0xB] = input_state->state[2][3];
+	output[0xC] = input_state->state[3][0];
+	output[0xD] = input_state->state[3][1];
+	output[0xE] = input_state->state[3][2];
 	output[0xF] = input_state->state[3][3];
 
 	return output;
