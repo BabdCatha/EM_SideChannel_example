@@ -233,10 +233,7 @@ void rotWord(uint8_t* input_word){
 
 }
 
-void cipher(uint8_t* key, T_STATE* input){
-
-	T_STATE** expanded_key;
-	expanded_key = keyExpansion(key);
+void cipher(T_STATE** expanded_key, T_STATE* input){
 
 	addRoundKey(input, expanded_key[0]);
 
@@ -256,5 +253,57 @@ void cipher(uint8_t* key, T_STATE* input){
 	addRoundKey(input, expanded_key[10]);
 
 	return;
+
+}
+
+T_STATE* bytesToState(uint8_t* input_array){
+
+	T_STATE* output;
+	output = malloc(sizeof(T_STATE));
+
+	output->state[0][0] = input_array[0x0];
+	output->state[1][0] = input_array[0x1];
+	output->state[2][0] = input_array[0x2];
+	output->state[3][0] = input_array[0x3];
+	output->state[0][1] = input_array[0x4];
+	output->state[1][1] = input_array[0x5];
+	output->state[2][1] = input_array[0x6];
+	output->state[3][1] = input_array[0x7];
+	output->state[0][2] = input_array[0x8];
+	output->state[1][2] = input_array[0x9];
+	output->state[2][2] = input_array[0xA];
+	output->state[3][2] = input_array[0xB];
+	output->state[0][3] = input_array[0xC];
+	output->state[1][3] = input_array[0xD];
+	output->state[2][3] = input_array[0xE];
+	output->state[3][3] = input_array[0xF];
+
+	return output;
+
+}
+
+uint8_t* stateToBytes(T_STATE* input_state){
+
+	uint8_t* output;
+	output = malloc(16*sizeof(uint8_t));
+
+	output[0x0] = input_state->state[0][0];
+	output[0x1] = input_state->state[1][0];
+	output[0x2] = input_state->state[2][0];
+	output[0x3] = input_state->state[3][0];
+	output[0x4] = input_state->state[0][1];
+	output[0x5] = input_state->state[1][1];
+	output[0x6] = input_state->state[2][1];
+	output[0x7] = input_state->state[3][1];
+	output[0x8] = input_state->state[0][2];
+	output[0x9] = input_state->state[1][2];
+	output[0xA] = input_state->state[2][2];
+	output[0xB] = input_state->state[3][2];
+	output[0xC] = input_state->state[0][3];
+	output[0xD] = input_state->state[1][3];
+	output[0xE] = input_state->state[2][3];
+	output[0xF] = input_state->state[3][3];
+
+	return output;
 
 }

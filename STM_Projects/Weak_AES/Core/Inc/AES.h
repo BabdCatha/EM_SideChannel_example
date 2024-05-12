@@ -21,7 +21,7 @@ void shiftRows(T_STATE* input_state);
 void mixColumns(T_STATE* input_state);
 void addRoundKey(T_STATE* input_state, T_STATE* round_key);
 T_STATE** keyExpansion(uint8_t* key);
-void cipher(uint8_t* key, T_STATE* input);
+void cipher(T_STATE** expanded_key, T_STATE* input);
 
 //Helper function to multiply by 2 in GF(256)
 uint8_t xtime(uint8_t input);
@@ -29,3 +29,7 @@ uint8_t xtime(uint8_t input);
 //Helper functions for the key expansion schedule
 void subWord(uint8_t* input_word);
 void rotWord(uint8_t* input_word);
+
+//Functions to translate byte arrays to AES states
+T_STATE* bytesToState(uint8_t* input_array);
+uint8_t* stateToBytes(T_STATE* input_state);
