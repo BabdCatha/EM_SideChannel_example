@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "main.h"
 
 //Parameters for AES-128
 #define Nr 10

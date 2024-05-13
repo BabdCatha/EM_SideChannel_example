@@ -3,7 +3,7 @@
 uint8_t SBox(uint8_t input){
 
 	uint8_t sbox[256] = {
-	    // 0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
+	    // 0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
 	    0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,  // 0
 	    0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,  // 1
 	    0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,  // 2
@@ -28,8 +28,12 @@ uint8_t SBox(uint8_t input){
 void subBytes(T_STATE* input){
 
 	uint8_t i = 0;
+	uint8_t j = 0;
+
 	for(i = 0; i < 4; i++){
-		subWord(input->state[i]);
+		for(j = 0; j < 4; j++){
+			input->state[i][j] = SBox(input->state[i][j]);
+		}
 	}
 
 }
@@ -240,7 +244,21 @@ void cipher(T_STATE** expanded_key, T_STATE* input){
 
 	uint8_t i = 0;
 
-	for(i = 1; i < 10; i++){
+	//The first round is excluded, so that signals can be set to help the attacker
+	//Setting up pin D7 as the signal
+	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_13, GPIO_PIN_SET);
+
+	//We single out the subBytes function for its non-linearity
+	subBytes(input);
+
+	//Lowering the signal
+	HAL_GPIO_WritePin(GPIOF, GPIO_PIN_13, GPIO_PIN_RESET);
+
+	shiftRows(input);
+	mixColumns(input);
+	addRoundKey(input, expanded_key[1]);
+
+	for(i = 2; i < 10; i++){
 
 		subBytes(input);
 		shiftRows(input);
