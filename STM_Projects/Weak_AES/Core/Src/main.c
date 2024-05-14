@@ -46,7 +46,6 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 uint8_t Rx_data[16];
 uint8_t* Tx_data;
-uint8_t Rx_count = 0;
 
 T_STATE** expanded_key;
 /* USER CODE END PV */
@@ -302,7 +301,7 @@ static void MX_GPIO_Init(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   //HAL_UART_Receive_IT(&huart3, Rx_data, 16);
-  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+  //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
   T_STATE* input;
   input = bytesToState(Rx_data);
 
@@ -311,6 +310,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   Tx_data = stateToBytes(input);
 
   HAL_UART_Transmit_IT(&huart3, Tx_data, 16*sizeof(uint8_t));
+
+  //Re-enabling the interrupt
+  HAL_UART_Receive_IT (&huart3, Rx_data, 16);
 
 }
 /* USER CODE END 4 */

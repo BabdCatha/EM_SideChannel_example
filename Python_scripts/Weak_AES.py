@@ -1,13 +1,35 @@
 import serial
 from time import sleep
+from secrets import token_bytes
 
-ser = serial.Serial(port='COM4', baudrate=9600, bytesize=serial.EIGHTBITS, timeout=10, stopbits=serial.STOPBITS_ONE, parity=serial.PARITY_NONE)
-data = bytearray([0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34])
-ser.write(data)
+#Serial link parameters
+port = "COM4"
+baudrate = 9600
 
-out = ser.read(16)
+#Options about the vectors to encrypt
+number_of_vectors = 100
 
-for byte in out:
-    print("0x{0:02x}".format(byte), end=" ")
+#Initializing the serial link with the STM32
+ser = serial.Serial(port=port, baudrate=baudrate, bytesize=serial.EIGHTBITS, timeout=10, stopbits=serial.STOPBITS_ONE, parity=serial.PARITY_NONE)
+
+#Setting up the file logging the encrypted vectors
+file = open("vectors.txt", "w")
+
+#Generating the test vectors, encrypting them and storing them
+for i in range(number_of_vectors):
+    data = bytearray(token_bytes(16))
+    ser.write(data)
+
+    out = ser.read(16)
+    out_str = ""
+
+    for byte in out:
+        out_str += "{0:02x}".format(byte)
+    print(out_str)
+    file.write(out_str + "\n")
+
+    sleep(1)
+
+file.close()
 
 ser.close()

@@ -8,5 +8,5 @@
 ../Core/Src/AES.c:219:6:subWord	2
 ../Core/Src/AES.c:230:6:rotWord	1
 ../Core/Src/AES.c:241:6:cipher	2
-../Core/Src/AES.c:276:10:bytesToState	1
-../Core/Src/AES.c:302:10:stateToBytes	1
+../Core/Src/AES.c:278:10:bytesToState	1
+../Core/Src/AES.c:304:10:stateToBytes	1
